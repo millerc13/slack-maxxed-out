@@ -23,6 +23,9 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
+    // Log the raw payload for debugging
+    console.log('GHL Payload:', JSON.stringify(data, null, 2));
+
     // Extract contact info from GHL webhook payload (fields are at root level)
     const firstName = data.first_name || 'Unknown';
     const lastName = data.last_name || '';
