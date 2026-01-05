@@ -25,15 +25,16 @@ exports.handler = async (event) => {
 
     // Extract contact info from GHL webhook payload
     const contact = data.contact || data;
-    const firstName = contact.first_name || contact.firstName || contact.name?.split(' ')[0] || 'Unknown';
-    const lastName = contact.last_name || contact.lastName || contact.name?.split(' ').slice(1).join(' ') || '';
-    const email = contact.email || 'No email provided';
-    const phone = contact.phone || contact.phoneNumber || 'No phone provided';
+    const firstName = contact.first_name || contact.firstName || data.first_name || data.firstName || 'Unknown';
+    const lastName = contact.last_name || contact.lastName || data.last_name || data.lastName || '';
+    const email = contact.email || data.email || 'No email provided';
+    const phone = contact.phone || contact.phoneNumber || data.phone || 'No phone provided';
 
-    // Try to get package/product info
-    const packageInterest = extractPackageInterest(contact.tags || data.tags || []);
-    const cartValue = data.cart_value || data.cartValue || data.amount || contact.cart_value || '';
-    const productName = data.product_name || data.productName || data.product || '';
+    // Package - manually set in each GHL webhook
+    const packageInterest = data.package || data.package_interest || 'Not specified';
+
+    // Assigned rep from GHL
+    const assignedTo = data.assigned_to || data.assignedTo || contact.assigned_to || 'Unassigned';
 
     // Build Slack message
     const slackMessage = {
@@ -57,22 +58,17 @@ exports.handler = async (event) => {
           type: 'section',
           fields: [
             { type: 'mrkdwn', text: `*Phone:*\n${phone}` },
-            { type: 'mrkdwn', text: `*Package Interest:*\n${packageInterest || 'Not specified'}` },
+            { type: 'mrkdwn', text: `*Package:*\n${packageInterest}` },
+          ],
+        },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*Assigned Rep:*\n${assignedTo}` },
           ],
         },
       ],
     };
-
-    // Add cart value if available
-    if (cartValue || productName) {
-      slackMessage.blocks.push({
-        type: 'section',
-        fields: [
-          { type: 'mrkdwn', text: `*Product:*\n${productName || 'N/A'}` },
-          { type: 'mrkdwn', text: `*Cart Value:*\n${cartValue ? `$${cartValue}` : 'N/A'}` },
-        ],
-      });
-    }
 
     // Add timestamp
     slackMessage.blocks.push({
@@ -128,25 +124,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
-function extractPackageInterest(tags) {
-  if (!Array.isArray(tags)) return null;
-
-  const packageTags = {
-    'package-interest-gold': 'Gold ($797)',
-    'package-interest-vip': 'VIP ($2,497)',
-    'package-interest-elite': 'Elite ($7,397)',
-    'gold': 'Gold',
-    'vip': 'VIP',
-    'elite': 'Elite',
-  };
-
-  for (const tag of tags) {
-    const normalizedTag = tag.toLowerCase().replace(/\s+/g, '-');
-    if (packageTags[normalizedTag]) {
-      return packageTags[normalizedTag];
-    }
-  }
-
-  return null;
-}

@@ -25,18 +25,17 @@ exports.handler = async (event) => {
 
     // Extract contact info from GHL webhook payload
     const contact = data.contact || data;
-    const firstName = contact.first_name || contact.firstName || contact.name?.split(' ')[0] || 'Unknown';
-    const lastName = contact.last_name || contact.lastName || contact.name?.split(' ').slice(1).join(' ') || '';
-    const email = contact.email || 'No email provided';
-    const phone = contact.phone || contact.phoneNumber || 'No phone provided';
+    const firstName = contact.first_name || contact.firstName || data.first_name || data.firstName || 'Unknown';
+    const lastName = contact.last_name || contact.lastName || data.last_name || data.lastName || '';
+    const email = contact.email || data.email || 'No email provided';
+    const phone = contact.phone || contact.phoneNumber || data.phone || 'No phone provided';
 
-    // Extract purchase/order info
-    const orderAmount = data.amount || data.order_amount || data.orderAmount || data.payment_amount || data.total || '';
-    const productName = data.product_name || data.productName || data.product || data.order_name || '';
-    const orderId = data.order_id || data.orderId || data.transaction_id || data.transactionId || '';
-    const paymentStatus = data.payment_status || data.paymentStatus || data.status || 'Completed';
+    // Package and amount - manually set in each GHL webhook
+    const packagePurchased = data.package || data.package_purchased || 'Not specified';
+    const orderAmount = data.amount || '';
 
-    const packagePurchased = extractPackagePurchased(contact.tags || data.tags || [], productName);
+    // Assigned rep from GHL
+    const assignedTo = data.assigned_to || data.assignedTo || contact.assigned_to || 'Unassigned';
 
     // Build Slack message
     const slackMessage = {
@@ -68,37 +67,18 @@ exports.handler = async (event) => {
           type: 'section',
           fields: [
             { type: 'mrkdwn', text: `*Phone:*\n${phone}` },
-            { type: 'mrkdwn', text: `*Status:*\n✅ ${paymentStatus}` },
+            { type: 'mrkdwn', text: `*Package:*\n${packagePurchased}` },
+          ],
+        },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*Amount:*\n${orderAmount ? `$${orderAmount}` : 'N/A'}` },
+            { type: 'mrkdwn', text: `*Assigned Rep:*\n${assignedTo}` },
           ],
         },
       ],
     };
-
-    // Add order details
-    const orderFields = [];
-    if (packagePurchased || productName) {
-      orderFields.push({
-        type: 'mrkdwn',
-        text: `*Package/Product:*\n${packagePurchased || productName}`,
-      });
-    }
-    if (orderAmount) {
-      orderFields.push({
-        type: 'mrkdwn',
-        text: `*Amount:*\n$${parseFloat(orderAmount).toLocaleString()}`,
-      });
-    }
-    if (orderFields.length > 0) {
-      slackMessage.blocks.push({ type: 'section', fields: orderFields });
-    }
-
-    // Add order ID if available
-    if (orderId) {
-      slackMessage.blocks.push({
-        type: 'context',
-        elements: [{ type: 'mrkdwn', text: `Order ID: ${orderId}` }],
-      });
-    }
 
     // Add timestamp
     slackMessage.blocks.push({
@@ -154,32 +134,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
-function extractPackagePurchased(tags, productName) {
-  if (Array.isArray(tags)) {
-    const purchaseTags = {
-      'purchased-gold': 'Gold Package ($797)',
-      'purchased-vip': 'VIP Package ($2,497)',
-      'purchased-elite': 'Elite Package ($7,397)',
-      'gold-purchased': 'Gold Package ($797)',
-      'vip-purchased': 'VIP Package ($2,497)',
-      'elite-purchased': 'Elite Package ($7,397)',
-    };
-
-    for (const tag of tags) {
-      const normalizedTag = tag.toLowerCase().replace(/\s+/g, '-');
-      if (purchaseTags[normalizedTag]) {
-        return purchaseTags[normalizedTag];
-      }
-    }
-  }
-
-  if (productName) {
-    const lowerProduct = productName.toLowerCase();
-    if (lowerProduct.includes('elite')) return 'Elite Package';
-    if (lowerProduct.includes('vip')) return 'VIP Package';
-    if (lowerProduct.includes('gold')) return 'Gold Package';
-  }
-
-  return null;
-}
