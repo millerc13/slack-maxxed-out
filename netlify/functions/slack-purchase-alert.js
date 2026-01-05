@@ -32,9 +32,10 @@ exports.handler = async (event) => {
     const email = data.email || 'No email provided';
     const phone = data.phone || 'No phone provided';
 
-    // Package and amount - manually set in each GHL webhook
-    const packagePurchased = data.package || 'Not specified';
-    const orderAmount = data.amount || '';
+    // Package and amount - check multiple possible locations
+    const customData = data.customData || data.custom_data || data.customFields || {};
+    const packagePurchased = data.package || customData.package || 'Not specified';
+    const orderAmount = data.amount || customData.amount || '';
 
     // Assigned rep from GHL user object
     const user = data.user || {};
@@ -126,7 +127,15 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify({ success: true, message: 'Purchase alert sent to Slack' }),
+      body: JSON.stringify({
+        success: true,
+        message: 'Purchase alert sent to Slack',
+        debug: {
+          receivedPackage: data.package,
+          receivedAmount: data.amount,
+          allKeys: Object.keys(data)
+        }
+      }),
     };
 
   } catch (error) {
