@@ -38,6 +38,7 @@ exports.handler = async (event) => {
 
     // Build Slack message
     const slackMessage = {
+      text: `Abandoned Checkout: ${firstName} ${lastName} - ${packageInterest}`,
       blocks: [
         {
           type: 'header',

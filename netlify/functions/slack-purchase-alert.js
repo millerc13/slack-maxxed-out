@@ -39,6 +39,7 @@ exports.handler = async (event) => {
 
     // Build Slack message
     const slackMessage = {
+      text: `New Purchase: ${firstName} ${lastName} - ${packagePurchased} - $${orderAmount}`,
       blocks: [
         {
           type: 'header',
