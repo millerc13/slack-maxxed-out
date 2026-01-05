@@ -23,18 +23,18 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
-    // Extract contact info from GHL webhook payload
-    const contact = data.contact || data;
-    const firstName = contact.first_name || contact.firstName || data.first_name || data.firstName || 'Unknown';
-    const lastName = contact.last_name || contact.lastName || data.last_name || data.lastName || '';
-    const email = contact.email || data.email || 'No email provided';
-    const phone = contact.phone || contact.phoneNumber || data.phone || 'No phone provided';
+    // Extract contact info from GHL webhook payload (fields are at root level)
+    const firstName = data.first_name || 'Unknown';
+    const lastName = data.last_name || '';
+    const email = data.email || 'No email provided';
+    const phone = data.phone || 'No phone provided';
 
     // Package - manually set in each GHL webhook
-    const packageInterest = data.package || data.package_interest || 'Not specified';
+    const packageInterest = data.package || 'Not specified';
 
-    // Assigned rep from GHL
-    const assignedTo = data.assigned_to || data.assignedTo || contact.assigned_to || 'Unassigned';
+    // Assigned rep from GHL user object
+    const user = data.user || {};
+    const assignedTo = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Unassigned';
 
     // Build Slack message
     const slackMessage = {
