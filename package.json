@@ -1,0 +1,14 @@
+{
+  "name": "slack-maxxed-out",
+  "version": "1.0.0",
+  "description": "Slack webhook notifications for Maxxed Out - triggered by GoHighLevel",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "keywords": ["slack", "webhooks", "gohighlevel", "netlify"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
