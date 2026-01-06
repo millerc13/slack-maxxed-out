@@ -29,16 +29,13 @@ exports.handler = async (event) => {
     const email = data.email || 'No email provided';
     const phone = data.phone || 'No phone provided';
 
-    // Package - manually set in each GHL webhook
-    const packageInterest = data.package || 'Not specified';
-
     // Assigned rep from GHL user object
     const user = data.user || {};
     const assignedTo = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Unassigned';
 
     // Build Slack message
     const slackMessage = {
-      text: `Abandoned Checkout: ${firstName} ${lastName} - ${packageInterest}`,
+      text: `Abandoned Checkout: ${firstName} ${lastName}`,
       blocks: [
         {
           type: 'header',
@@ -59,12 +56,6 @@ exports.handler = async (event) => {
           type: 'section',
           fields: [
             { type: 'mrkdwn', text: `*Phone:*\n${phone}` },
-            { type: 'mrkdwn', text: `*Package:*\n${packageInterest}` },
-          ],
-        },
-        {
-          type: 'section',
-          fields: [
             { type: 'mrkdwn', text: `*Assigned Rep:*\n${assignedTo}` },
           ],
         },
