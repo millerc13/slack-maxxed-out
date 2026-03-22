@@ -28,6 +28,7 @@ exports.handler = async (event) => {
     const firstName = data.first_name || 'Unknown';
     const lastName = data.last_name || '';
     const email = data.email || 'No email provided';
+    const phone = data.phone || 'No phone provided';
 
     const slackMessage = {
       text: `DD Application Submitted: ${firstName} ${lastName}`,
@@ -45,6 +46,12 @@ exports.handler = async (event) => {
           fields: [
             { type: 'mrkdwn', text: `*Name:*\n${firstName} ${lastName}` },
             { type: 'mrkdwn', text: `*Email:*\n${email}` },
+          ],
+        },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*Phone:*\n${phone}` },
           ],
         },
         {
